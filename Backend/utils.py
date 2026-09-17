@@ -16,8 +16,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def create_access_token(user_id : int):
+def create_access_token(user_id: int):
     return jwt.encode({"sub": str(user_id)}, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_token(identifier):
+    return jwt.encode({"sub": str(identifier)}, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -27,12 +30,17 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        sub: str = payload.get("sub")
+        if sub is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if sub.isdigit():
+        user = db.query(models.User).filter(models.User.id == int(sub)).first()
+    else:
+        user = db.query(models.User).filter(models.User.email == sub).first()
+
     if user is None:
         raise credentials_exception
     return user
