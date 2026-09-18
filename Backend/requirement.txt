@@ -9,3 +9,4 @@ passlib[bcrypt]
 python-multipart
 werkzeug
 pg8000
+aiofiles

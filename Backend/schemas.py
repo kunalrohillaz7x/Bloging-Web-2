@@ -34,6 +34,7 @@ class PostOut(BaseModel):
     id: int
     title: str
     content: str
+    image_url: Optional[str] = None
     user_id: Optional[int] = None
     author: Optional[str] = None
 
