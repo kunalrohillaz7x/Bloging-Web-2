@@ -2,7 +2,9 @@ import React from "react";
 
 const BlogCard = ({ key, image, title,content }) => {
   return (
-    <div className="group cursor-pointer bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-600 transition-all duration-300 hover:-translate-y-1">
+    <a target="blank" href="https://www.instagram.com">
+      <div 
+     className="group cursor-pointer bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-600 transition-all duration-300 hover:-translate-y-1">
 
       <div className="relative overflow-hidden aspect-[16/10]">
         <img
@@ -25,6 +27,7 @@ const BlogCard = ({ key, image, title,content }) => {
         </div>
       </div>
     </div>
+    </a>
   );
 };
 

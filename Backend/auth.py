@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 
 router = APIRouter(tags=["Authentication"])
 
+#register
 @router.post("/signup", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def register(
     user:schemas.UserCreate,
@@ -32,7 +33,9 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db:Session = Depends(get_db)
 ):
+    # Try to find user by username (Swagger sends "username" field)
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    # Also try by email in case they entered their email in the username field
     if not user:
         user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user:
