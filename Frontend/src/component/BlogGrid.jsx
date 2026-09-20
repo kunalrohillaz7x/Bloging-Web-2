@@ -1,16 +1,7 @@
 import React from "react";
 import BlogCard from "./BlogCard";
 
-import sample1 from "../assets/sample1.jpg";
-import sample2 from "../assets/sample2.jpg";
-import sample3 from "../assets/sample3.jpg";
-import sample4 from "../assets/sample4.jpg";
-
-
-
-const sampleBlogs = [];
-
-const BlogGrid = ({Blog,setBlog}) => {
+const BlogGrid = ({ Blog }) => {
   return (
     <section id="blogs" className="py-20">
       <div className="max-w-7xl mx-auto px-6">
@@ -24,20 +15,27 @@ const BlogGrid = ({Blog,setBlog}) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          
-          {Blog.map((e,idx) => (
-            <BlogCard
-              key={idx}
-              image={e.image}
-              title={e.title}
-              content={e.content}
-            />
-          ))}
-        </div>
+        {Blog.length === 0 ? (
+          <p className="text-center text-neutral-500 text-lg py-12">
+            No blogs yet. Be the first to write one! ✍️
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Blog.map((e) => (
+              <BlogCard
+                key={e.id}
+                image_url={e.image_url}
+                title={e.title}
+                content={e.content}
+                author={e.author}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
 };
 
 export default BlogGrid;
+

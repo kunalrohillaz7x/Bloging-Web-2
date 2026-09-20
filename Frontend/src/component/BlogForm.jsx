@@ -1,8 +1,13 @@
 import React, { useState, useRef } from "react";
+import { createPost } from "../api";
+import { useAuth } from "../context/AuthContext";
 
-const BlogForm = ({Blog,setBlog}) => {
+const BlogForm = ({ onPub }) => {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFile = (file) => {
@@ -13,6 +18,8 @@ const BlogForm = ({Blog,setBlog}) => {
       fileInputRef.current.files = dt.files;
     }
   };
+
+  const { token, user } = useAuth();
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -32,7 +39,49 @@ const BlogForm = ({Blog,setBlog}) => {
 
   const removeImage = () => {
     setImagePreview(null);
-    fileInputRef.current.value = "";
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!token) {
+      alert("Please log in first to publish a blog!");
+      return;
+    }
+
+    if (!title.trim() || !content.trim()) {
+      alert("Please fill in both the title and content.");
+      return;
+    }
+
+    setSubmitting(true);
+    const file = fileInputRef.current?.files?.[0] || null;
+
+    try {
+      await createPost(title, content, file, token);
+      // Reset form
+      setTitle("");
+      setContent("");
+      removeImage();
+      if (onPub) onPub();  // Tell Main.jsx to reload blogs from backend
+      alert("🎉 Blog published successfully!");
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      let errorMsg = "Failed to publish.";
+      if (Array.isArray(detail)) {
+        errorMsg = detail.map((d) => d.msg || JSON.stringify(d)).join(", ");
+      } else if (typeof detail === "string") {
+        errorMsg = detail;
+      } else if (detail) {
+        errorMsg = JSON.stringify(detail);
+      }
+      alert(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -48,21 +97,7 @@ const BlogForm = ({Blog,setBlog}) => {
           </p>
         </div>
 
-        <form onSubmit={(e)=>{
-          e.preventDefault();
-          const file = fileInputRef.current.files[0];
-          const img = file ? URL.createObjectURL(file) : null;
-
-            setBlog([...Blog, {image: img,
-            title: e.target[1].value,
-            content: e.target[2].value}]
-          );
-
-          // Reset form
-          e.target.reset();
-          setImagePreview(null);
-
-        }} className="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-8 md:p-10 space-y-8">
+        <form onSubmit={handleSubmit} className="bg-neutral-900/60 border border-neutral-800 rounded-2xl p-8 md:p-10 space-y-8">
 
           {/* Custom Image Upload Area */}
           <div>
@@ -154,7 +189,10 @@ const BlogForm = ({Blog,setBlog}) => {
             <input
               type="text"
               id="blog-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Give your blog an awesome title..."
+              required
               className="w-full bg-neutral-800/60 border border-neutral-700 rounded-xl px-5 py-4 text-white placeholder-neutral-500 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500/40 transition-all duration-200"
             />
           </div>
@@ -166,7 +204,10 @@ const BlogForm = ({Blog,setBlog}) => {
             <textarea
               id="blog-content"
               rows="8"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder={"Start writing your blog content here...\n\nYou can write multiple paragraphs.\nMake it interesting!"}
+              required
               className="w-full bg-neutral-800/60 border border-neutral-700 rounded-xl px-5 py-4 text-white placeholder-neutral-500 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500/40 transition-all duration-200"
             ></textarea>
             <p className="text-xs text-neutral-600 mt-2">
@@ -176,9 +217,10 @@ const BlogForm = ({Blog,setBlog}) => {
 
           <button
             type="submit"
-            className="w-full bg-sky-500 hover:bg-sky-400 text-white py-4 rounded-xl text-lg font-bold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            disabled={submitting}
+            className="w-full bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 disabled:cursor-not-allowed text-white py-4 rounded-xl text-lg font-bold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           >
-            Publish Blog
+            {submitting ? "Publishing..." : "Publish Blog"}
           </button>
 
         </form>
